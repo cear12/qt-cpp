@@ -24,65 +24,66 @@
 #include <QStringList>
 #include <QThread>
 #include <QtConcurrent>
-
 #include <chrono>
 #include <memory>
 
 class AsyncProcessor : public QObject {
-    Q_OBJECT
+  Q_OBJECT
 
-public:
-    // Fire-and-forget async operation.
-    QFuture<QString> processDataAsync(const QByteArray& data) {
-        return QtConcurrent::run([data]() -> QString {
-            QThread::msleep(2000);  // stand-in for real work
-            return QString("Processed: %1 bytes").arg(data.size());
-        });
-    }
+ public:
+  // Fire-and-forget async operation.
+  QFuture<QString> processDataAsync(const QByteArray& data) {
+    return QtConcurrent::run([data]() -> QString {
+      QThread::msleep(2000);  // stand-in for real work
+      return QString("Processed: %1 bytes").arg(data.size());
+    });
+  }
 
-    // Multi-item operation with progress reporting and cancellation support.
-    QFuture<QStringList> processMultipleAsync(const QList<QByteArray>& dataList) {
-        auto promise = std::make_shared<QPromise<QStringList>>();
-        auto future = promise->future();
+  // Multi-item operation with progress reporting and cancellation support.
+  QFuture<QStringList> processMultipleAsync(const QList<QByteArray>& dataList) {
+    auto promise = std::make_shared<QPromise<QStringList>>();
+    auto future = promise->future();
 
-        QtConcurrent::run([promise, dataList]() {
-            QStringList results;
-            int total = dataList.size();
-            promise->setProgressRange(0, total);
+    QtConcurrent::run([promise, dataList]() {
+      QStringList results;
+      int total = dataList.size();
+      promise->setProgressRange(0, total);
 
-            for (int i = 0; i < total; ++i) {
-                if (promise->isCanceled()) {
-                    return;
-                }
+      for (int i = 0; i < total; ++i) {
+        if (promise->isCanceled()) {
+          return;
+        }
 
-                promise->setProgressValue(i);
-                results << QString("Item %1: %2 bytes").arg(i).arg(dataList[i].size());
-                QThread::msleep(500);  // stand-in for real per-item work
-            }
+        promise->setProgressValue(i);
+        results << QString("Item %1: %2 bytes").arg(i).arg(dataList[i].size());
+        QThread::msleep(500);  // stand-in for real per-item work
+      }
 
-            promise->addResult(results);
-            promise->finish();
-        });
+      promise->addResult(results);
+      promise->finish();
+    });
 
-        return future;
-    }
+    return future;
+  }
 
-    // Bridges a QFuture to signals, for callers that would rather connect a
-    // slot than block on or poll the future themselves.
-    void watchFuture(const QFuture<QString>& future) {
-        auto* watcher = new QFutureWatcher<QString>(this);
+  // Bridges a QFuture to signals, for callers that would rather connect a
+  // slot than block on or poll the future themselves.
+  void watchFuture(const QFuture<QString>& future) {
+    auto* watcher = new QFutureWatcher<QString>(this);
 
-        connect(watcher, &QFutureWatcher<QString>::finished, this, [this, watcher]() {
-            emit operationCompleted(watcher->result());
-            watcher->deleteLater();
-        });
+    connect(watcher, &QFutureWatcher<QString>::finished, this,
+            [this, watcher]() {
+              emit operationCompleted(watcher->result());
+              watcher->deleteLater();
+            });
 
-        connect(watcher, &QFutureWatcher<QString>::progressValueChanged, this, &AsyncProcessor::progressChanged);
+    connect(watcher, &QFutureWatcher<QString>::progressValueChanged, this,
+            &AsyncProcessor::progressChanged);
 
-        watcher->setFuture(future);
-    }
+    watcher->setFuture(future);
+  }
 
-signals:
-    void operationCompleted(const QString& result);
-    void progressChanged(int value);
+ signals:
+  void operationCompleted(const QString& result);
+  void progressChanged(int value);
 };

@@ -20,77 +20,79 @@
 #include <QVariantMap>
 
 class AdvancedNetworkManager : public QObject {
-    Q_OBJECT
+  Q_OBJECT
 
-public:
-    explicit AdvancedNetworkManager(QObject* parent = nullptr) : QObject(parent) {
-        m_manager = new QNetworkAccessManager(this);
-        m_cache = new QNetworkDiskCache(this);
-        m_cache->setCacheDirectory("./cache");
-        m_manager->setCache(m_cache);
+ public:
+  explicit AdvancedNetworkManager(QObject* parent = nullptr) : QObject(parent) {
+    m_manager = new QNetworkAccessManager(this);
+    m_cache = new QNetworkDiskCache(this);
+    m_cache->setCacheDirectory("./cache");
+    m_manager->setCache(m_cache);
 
-        QSslConfiguration sslConfig = QSslConfiguration::defaultConfiguration();
-        sslConfig.setProtocol(QSsl::TlsV1_2OrLater);
-        QSslConfiguration::setDefaultConfiguration(sslConfig);
+    QSslConfiguration sslConfig = QSslConfiguration::defaultConfiguration();
+    sslConfig.setProtocol(QSsl::TlsV1_2OrLater);
+    QSslConfiguration::setDefaultConfiguration(sslConfig);
 
-        connect(m_manager, &QNetworkAccessManager::finished, this, &AdvancedNetworkManager::requestFinished);
-        connect(m_manager, &QNetworkAccessManager::sslErrors, this, &AdvancedNetworkManager::handleSslErrors);
+    connect(m_manager, &QNetworkAccessManager::finished, this,
+            &AdvancedNetworkManager::requestFinished);
+    connect(m_manager, &QNetworkAccessManager::sslErrors, this,
+            &AdvancedNetworkManager::handleSslErrors);
+  }
+
+ public slots:
+  void makeRequest(const QString& url, const QVariantMap& headers = {}) {
+    QNetworkRequest request((QUrl(url)));
+
+    for (auto it = headers.constBegin(); it != headers.constEnd(); ++it) {
+      request.setRawHeader(it.key().toUtf8(), it.value().toByteArray());
     }
 
-public slots:
-    void makeRequest(const QString& url, const QVariantMap& headers = {}) {
-        QNetworkRequest request((QUrl(url)));
+    request.setHeader(QNetworkRequest::UserAgentHeader, "AdvancedApp/1.0");
 
-        for (auto it = headers.constBegin(); it != headers.constEnd(); ++it) {
-            request.setRawHeader(it.key().toUtf8(), it.value().toByteArray());
-        }
+    QNetworkReply* reply = m_manager->get(request);
+    m_activeRequests.insert(reply, QDateTime::currentDateTime());
 
-        request.setHeader(QNetworkRequest::UserAgentHeader, "AdvancedApp/1.0");
+    // Give any single request 30s before we give up on it.
+    QTimer::singleShot(30000, reply, [reply]() {
+      if (reply->isRunning()) {
+        reply->abort();
+      }
+    });
+  }
 
-        QNetworkReply* reply = m_manager->get(request);
-        m_activeRequests.insert(reply, QDateTime::currentDateTime());
+ signals:
+  void requestCompleted(const QString& url, const QByteArray& data);
+  void requestFailed(const QString& url, const QString& error);
 
-        // Give any single request 30s before we give up on it.
-        QTimer::singleShot(30000, reply, [reply]() {
-            if (reply->isRunning()) {
-                reply->abort();
-            }
-        });
+ private slots:
+  void requestFinished(QNetworkReply* reply) {
+    reply->deleteLater();
+    m_activeRequests.remove(reply);
+
+    if (reply->error() != QNetworkReply::NoError) {
+      emit requestFailed(reply->url().toString(), reply->errorString());
+      return;
     }
 
-signals:
-    void requestCompleted(const QString& url, const QByteArray& data);
-    void requestFailed(const QString& url, const QString& error);
+    QByteArray data = reply->readAll();
+    emit requestCompleted(reply->url().toString(), data);
+  }
 
-private slots:
-    void requestFinished(QNetworkReply* reply) {
-        reply->deleteLater();
-        m_activeRequests.remove(reply);
-
-        if (reply->error() != QNetworkReply::NoError) {
-            emit requestFailed(reply->url().toString(), reply->errorString());
-            return;
-        }
-
-        QByteArray data = reply->readAll();
-        emit requestCompleted(reply->url().toString(), data);
+  void handleSslErrors(QNetworkReply* reply, const QList<QSslError>& errors) {
+    for (const QSslError& error : errors) {
+      qWarning() << "SSL Error:" << error.errorString();
     }
 
-    void handleSslErrors(QNetworkReply* reply, const QList<QSslError>& errors) {
-        for (const QSslError& error : errors) {
-            qWarning() << "SSL Error:" << error.errorString();
-        }
+    // NOTE: ignoring SSL errors unconditionally is convenient for a demo
+    // against self-signed/test endpoints but is NOT safe for production
+    // use -- a real app must inspect `errors` and only ignore the
+    // specific, expected ones (e.g. a pinned self-signed cert), never
+    // blanket-ignore everything.
+    reply->ignoreSslErrors();
+  }
 
-        // NOTE: ignoring SSL errors unconditionally is convenient for a demo
-        // against self-signed/test endpoints but is NOT safe for production
-        // use -- a real app must inspect `errors` and only ignore the
-        // specific, expected ones (e.g. a pinned self-signed cert), never
-        // blanket-ignore everything.
-        reply->ignoreSslErrors();
-    }
-
-private:
-    QNetworkAccessManager* m_manager;
-    QNetworkDiskCache* m_cache;
-    QHash<QNetworkReply*, QDateTime> m_activeRequests;
+ private:
+  QNetworkAccessManager* m_manager;
+  QNetworkDiskCache* m_cache;
+  QHash<QNetworkReply*, QDateTime> m_activeRequests;
 };

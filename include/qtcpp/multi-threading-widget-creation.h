@@ -19,37 +19,39 @@
 #include <QWidget>
 
 class WidgetCreator : public QObject {
-    Q_OBJECT
+  Q_OBJECT
 
-public slots:
-    void createWidgetSafely(const QString& data) {
-        // This slot runs on whatever thread `this` lives on -- the GUI
-        // thread, as long as WidgetCreator was constructed there and the
-        // connection to it is a (default or explicit) queued connection
-        // from a different thread.
-        QWidget* widget = new QWidget();
-        widget->setWindowTitle(data);
-        widget->show();
-        emit widgetCreated();
-    }
+ public slots:
+  void createWidgetSafely(const QString& data) {
+    // This slot runs on whatever thread `this` lives on -- the GUI
+    // thread, as long as WidgetCreator was constructed there and the
+    // connection to it is a (default or explicit) queued connection
+    // from a different thread.
+    QWidget* widget = new QWidget();
+    widget->setWindowTitle(data);
+    widget->show();
+    emit widgetCreated();
+  }
 
-signals:
-    void widgetCreated();
+ signals:
+  void widgetCreated();
 };
 
 class WorkerThread : public QThread {
-    Q_OBJECT
+  Q_OBJECT
 
-signals:
-    void requestWidgetCreation(const QString& data);
+ signals:
+  void requestWidgetCreation(const QString& data);
 
-protected:
-    void run() override {
-        QString result = performHeavyCalculation();
-        emit requestWidgetCreation(result);
-    }
+ protected:
+  void run() override {
+    QString result = performHeavyCalculation();
+    emit requestWidgetCreation(result);
+  }
 
-private:
-    // Stand-in for whatever the real background computation is.
-    QString performHeavyCalculation() { return QStringLiteral("Computed on background thread"); }
+ private:
+  // Stand-in for whatever the real background computation is.
+  QString performHeavyCalculation() {
+    return QStringLiteral("Computed on background thread");
+  }
 };

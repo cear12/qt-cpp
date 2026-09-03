@@ -16,31 +16,33 @@
 #include <QVariant>
 
 class BackEnd : public QObject {
-    Q_OBJECT
-    Q_PROPERTY(QString userName READ userName WRITE setUserName NOTIFY userNameChanged)
-    Q_PROPERTY(QStringList dataList READ dataList NOTIFY dataListChanged)
+  Q_OBJECT
+  Q_PROPERTY(
+      QString userName READ userName WRITE setUserName NOTIFY userNameChanged)
+  Q_PROPERTY(QStringList dataList READ dataList NOTIFY dataListChanged)
 
-public:
-    explicit BackEnd(QObject* parent = nullptr);
+ public:
+  explicit BackEnd(QObject* parent = nullptr);
 
-    Q_INVOKABLE void processData(const QString& input);
-    Q_INVOKABLE QVariant getData(int index) const;
+  Q_INVOKABLE void processData(const QString& input);
+  Q_INVOKABLE QVariant getData(int index) const;
 
-    QString userName() const { return m_userName; }
-    void setUserName(const QString& userName);
+  QString userName() const { return m_userName; }
+  void setUserName(const QString& userName);
 
-    QStringList dataList() const { return m_dataList; }
+  QStringList dataList() const { return m_dataList; }
 
-signals:
-    void userNameChanged();
-    void dataListChanged();
-    void processingFinished(const QString& result);
+ signals:
+  void userNameChanged();
+  void dataListChanged();
+  void processingFinished(const QString& result);
 
-private:
-    QString m_userName;
-    QStringList m_dataList;
+ private:
+  QString m_userName;
+  QStringList m_dataList;
 };
 
 // Registers BackEnd as a creatable QML type under the given URI. Call once,
-// before constructing any QQmlEngine that needs to `import com.mycompany.backend 1.0`.
+// before constructing any QQmlEngine that needs to `import
+// com.mycompany.backend 1.0`.
 void registerQmlTypes();

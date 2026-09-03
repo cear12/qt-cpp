@@ -40,43 +40,43 @@
 namespace client_server {
 
 class MyServer : public QTcpServer {
-    Q_OBJECT
+  Q_OBJECT
 
-public:
-    explicit MyServer(QObject* parent);
+ public:
+  explicit MyServer(QObject* parent);
 
-    bool StartServer(quint16 port = 1234);
+  bool StartServer(quint16 port = 1234);
 
-protected:
-    void incomingConnection(qintptr socketDescriptor) override;
+ protected:
+  void incomingConnection(qintptr socketDescriptor) override;
 };
 
 class MyClient : public QObject {
-    Q_OBJECT
+  Q_OBJECT
 
-public:
-    explicit MyClient(QObject* parent);
+ public:
+  explicit MyClient(QObject* parent);
 
-    void SetSocket(qintptr descriptor);
+  void SetSocket(qintptr descriptor);
 
-private slots:
-    void onConnected();
-    void onDisconnected();
-    void onReadyRead();
-    void onTaskResult(int number);
+ private slots:
+  void onConnected();
+  void onDisconnected();
+  void onReadyRead();
+  void onTaskResult(int number);
 
-private:
-    QTcpSocket* socket = nullptr;
+ private:
+  QTcpSocket* socket = nullptr;
 };
 
 class MyTask : public QObject, public QRunnable {
-    Q_OBJECT
+  Q_OBJECT
 
-public:
-    void run() override;
+ public:
+  void run() override;
 
-signals:
-    void Result(int number);
+ signals:
+  void Result(int number);
 };
 
 }  // namespace client_server

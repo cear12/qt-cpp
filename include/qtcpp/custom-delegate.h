@@ -22,27 +22,30 @@
 #include <QWidget>
 
 class StarDelegate : public QStyledItemDelegate {
-    Q_OBJECT
+  Q_OBJECT
 
-public:
-    explicit StarDelegate(QWidget* parent = nullptr);
+ public:
+  explicit StarDelegate(QWidget* parent = nullptr);
 
-    void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
+  void paint(QPainter* painter, const QStyleOptionViewItem& option,
+             const QModelIndex& index) const override;
 
-    QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override;
+  QSize sizeHint(const QStyleOptionViewItem& option,
+                 const QModelIndex& index) const override;
 
-    QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option,
-                           const QModelIndex& index) const override;
+  QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option,
+                        const QModelIndex& index) const override;
 
-    void setEditorData(QWidget* editor, const QModelIndex& index) const override;
-    void setModelData(QWidget* editor, QAbstractItemModel* model, const QModelIndex& index) const override;
+  void setEditorData(QWidget* editor, const QModelIndex& index) const override;
+  void setModelData(QWidget* editor, QAbstractItemModel* model,
+                    const QModelIndex& index) const override;
 
-private slots:
-    void commitAndCloseEditor();
+ private slots:
+  void commitAndCloseEditor();
 
-private:
-    static constexpr int kMaxRating = 5;
+ private:
+  static constexpr int kMaxRating = 5;
 
-    QPolygonF starPolygon;     // used to paint each earned star
-    QPolygonF diamondPolygon;  // used to mark a rating of zero
+  QPolygonF starPolygon;     // used to paint each earned star
+  QPolygonF diamondPolygon;  // used to mark a rating of zero
 };

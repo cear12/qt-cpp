@@ -25,38 +25,39 @@
 // The actual widget this plugin exposes to Qt Designer: a small colored
 // panel with a centered caption label.
 class CustomWidget : public QWidget {
-    Q_OBJECT
+  Q_OBJECT
 
-public:
-    explicit CustomWidget(QWidget* parent = nullptr);
+ public:
+  explicit CustomWidget(QWidget* parent = nullptr);
 
-    QString caption() const;
-    void setCaption(const QString& text);
+  QString caption() const;
+  void setCaption(const QString& text);
 
-private:
-    QLabel* m_label;
+ private:
+  QLabel* m_label;
 };
 
-class CustomWidgetPlugin : public QObject, public QDesignerCustomWidgetInterface {
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDesignerCustomWidgetInterface")
-    Q_INTERFACES(QDesignerCustomWidgetInterface)
+class CustomWidgetPlugin : public QObject,
+                           public QDesignerCustomWidgetInterface {
+  Q_OBJECT
+  Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDesignerCustomWidgetInterface")
+  Q_INTERFACES(QDesignerCustomWidgetInterface)
 
-public:
-    explicit CustomWidgetPlugin(QObject* parent = nullptr);
+ public:
+  explicit CustomWidgetPlugin(QObject* parent = nullptr);
 
-    bool isContainer() const override;
-    bool isInitialized() const override;
-    QIcon icon() const override;
-    QString domXml() const override;
-    QString group() const override;
-    QString includeFile() const override;
-    QString name() const override;
-    QString toolTip() const override;
-    QString whatsThis() const override;
-    QWidget* createWidget(QWidget* parent) override;
-    void initialize(QDesignerFormEditorInterface* core) override;
+  bool isContainer() const override;
+  bool isInitialized() const override;
+  QIcon icon() const override;
+  QString domXml() const override;
+  QString group() const override;
+  QString includeFile() const override;
+  QString name() const override;
+  QString toolTip() const override;
+  QString whatsThis() const override;
+  QWidget* createWidget(QWidget* parent) override;
+  void initialize(QDesignerFormEditorInterface* core) override;
 
-private:
-    bool m_initialized;
+ private:
+  bool m_initialized;
 };
