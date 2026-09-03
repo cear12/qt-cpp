@@ -127,3 +127,18 @@ Requires Qt6 (Core, Widgets, Gui, Network, Concurrent, OpenGL,
 OpenGLWidgets, StateMachine, Qml, UiPlugin) and a C++20 compiler. No Catch2
 test suite in this repo -- the three demos above, each printing PASS/FAIL
 per check, are what CI runs as the verification step.
+
+## Building in Visual Studio
+
+With three executable targets (`console_demo`, `widgets_demo`,
+`client_server_demo`) and no CMakePresets.json, Visual Studio's Open
+Folder / CMake integration has no default startup item configured.
+Pressing **Debug/Run** (not Build) then pops a blocking "Select Startup
+Item" dialog -- easy to mistake for the project failing to build, even
+though **Build > Build All** (Ctrl+Shift+B) succeeds regardless of
+what's selected there (assuming Qt6 is discoverable -- see the local
+verification note above). `CMakePresets.json` sets
+`CMAKE_VS_STARTUP_PROJECT` to `console_demo`, the one demo that needs no
+display, so Debug/Run works immediately too; pick `widgets_demo` or
+`client_server_demo` from the dropdown next to the Run button to debug
+either of the other two.
