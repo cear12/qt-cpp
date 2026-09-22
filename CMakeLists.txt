@@ -51,6 +51,8 @@ target_link_libraries(qtcpp PUBLIC
 )
 target_compile_options(qtcpp PRIVATE $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra>)
 
+enable_testing()
+
 if(QTCPP_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()

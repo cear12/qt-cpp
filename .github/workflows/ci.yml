@@ -1,51 +1,27 @@
 name: CI
 
-# Qt is heavy to install on Windows/macOS runners without extra actions
-# (aqtinstall / jurplel/install-qt-action), and this repo's code is not
-# platform-specific -- so, like protocols-cpp in this same portfolio,
-# CI targets ubuntu-latest only, where Qt6 is a plain apt install.
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
-  build-and-run:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Qt6
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            qt6-base-dev \
-            qt6-base-dev-tools \
-            qt6-declarative-dev \
-            qt6-tools-dev \
-            libqt6opengl6-dev \
-            libqt6statemachine6-dev \
-            libqt6uitools6-dev \
-            libgl1-mesa-dev \
-            xvfb
-
-      - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build
-        run: cmake --build build --config Release -j"$(nproc)"
-
-      # console_demo needs no display at all. widgets_demo and
-      # client_server_demo run under xvfb-run so QApplication has a (virtual,
-      # headless) display to attach to -- see each demo's own header comment
-      # for what it does and does not verify without a real GPU/display.
-      - name: Run console_demo
-        run: ./build/examples/console_demo
-
-      - name: Run widgets_demo (offscreen)
-        run: xvfb-run -a ./build/examples/widgets_demo -platform offscreen
-
-      - name: Run client_server_demo
-        run: ./build/examples/client_server_demo
+  cmake:
+    uses: cear12/ci-workflows/.github/workflows/cmake.yml@v1
+    with:
+      # Qt comes from apt, so Linux only (the code itself is portable).
+      os: '["ubuntu-latest"]'
+      apt-packages: >-
+        qt6-base-dev qt6-base-dev-tools qt6-declarative-dev qt6-tools-dev
+        qt6-scxml-dev libqt6opengl6-dev libgl1-mesa-dev
+      # Qt keeps process-lifetime allocations that LeakSanitizer reports as
+      # leaks; the demos are smoke tests, not a sanitizer target.
+      sanitizers: ""
