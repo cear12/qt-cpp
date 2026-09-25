@@ -15,7 +15,7 @@
 // from QDesignerCustomWidgetInterface) can never actually be instantiated,
 // so this plugin could never have worked even once fully compiled. Fixed by
 // implementing every method and adding a real (if simple) CustomWidget.
-#include <QDesignerCustomWidgetInterface>
+#include <QtUiPlugin/QDesignerCustomWidgetInterface>
 #include <QIcon>
 #include <QLabel>
 #include <QObject>

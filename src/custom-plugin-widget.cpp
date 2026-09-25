@@ -1,6 +1,6 @@
 #include "qtcpp/custom-plugin-widget.h"
 
-#include <QDesignerFormEditorInterface>
+#include <QtDesigner/QDesignerFormEditorInterface>
 #include <QVBoxLayout>
 
 CustomWidget::CustomWidget(QWidget* parent) : QWidget(parent) {
